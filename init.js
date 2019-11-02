@@ -5,7 +5,6 @@ var app = Elm.Main.init({
 })
 
 var pdfjsLib = window['pdfjs-dist/build/pdf']
-pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.2.228/pdf.worker.min.js'
 
 app.ports.parsePdf.subscribe(function(file) {
   getPdfTextFromFile(file).then(console.log, function(error) {
