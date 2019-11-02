@@ -7,7 +7,9 @@ var app = Elm.Main.init({
 var pdfjsLib = window['pdfjs-dist/build/pdf']
 
 app.ports.parsePdf.subscribe(function(file) {
-  getPdfTextFromFile(file).then(console.log, function(error) {
+  getPdfTextFromFile(file).then(function(textArray) {
+    app.ports.extractedTextFromPdf.send(textArray)
+  }, function(error) {
     if (error.name == 'InvalidPDFException') {
       // TODO: Tell Elm the file is invalid.
       console.error('Invalid PDF!')
@@ -30,7 +32,7 @@ function getPdfTextFromFile(file) {
       }).then(function(page) {
         return page.getTextContent()
       }).then(function(textContent) {
-        return textContent.items.map(function (s) { return s.str }).join("\n")
+        return textContent.items.map(function (s) { return s.str })
       })
       )
     }

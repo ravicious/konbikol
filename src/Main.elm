@@ -1,5 +1,6 @@
 port module Main exposing (main)
 
+import Array exposing (Array)
 import Browser
 import File exposing (File)
 import Html exposing (..)
@@ -14,7 +15,7 @@ main =
         { init = init
         , view = view
         , update = update
-        , subscriptions = \_ -> Sub.none
+        , subscriptions = subscriptions
         }
 
 
@@ -24,9 +25,18 @@ type alias Model =
 
 type Msg
     = GotFile Decode.Value
+    | GotPdfStrings (Array String)
 
 
 port parsePdf : Encode.Value -> Cmd msg
+
+
+port extractedTextFromPdf : (Array String -> msg) -> Sub msg
+
+
+subscriptions : Model -> Sub Msg
+subscriptions _ =
+    extractedTextFromPdf GotPdfStrings
 
 
 init : () -> ( Model, Cmd Msg )
@@ -39,6 +49,9 @@ update msg model =
     case msg of
         GotFile file ->
             ( model, parsePdf file )
+
+        GotPdfStrings strings ->
+            ( model, Cmd.none )
 
 
 fileDecoder : Decode.Decoder Decode.Value
