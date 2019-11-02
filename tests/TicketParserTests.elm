@@ -2,7 +2,7 @@ module TicketParserTests exposing (..)
 
 import Array
 import DateTime exposing (DateTime)
-import Expect exposing (Expectation)
+import Expect
 import Test exposing (..)
 import Ticket
 import TicketParser
@@ -55,6 +55,21 @@ suite =
                         }
                 in
                 TicketParser.parseStrings doubleTicketStrings
+                    |> Expect.equal (Ok expectedTicket)
+        , test "handles a ticket bought for the next year" <|
+            \_ ->
+                let
+                    expectedTicket =
+                        { departureStation = "Foo"
+                        , arrivalStation = "Bar"
+                        , departure = DateTime 2020 1 1 23 14
+                        , arrival = DateTime 2020 1 2 9 15
+                        , train = "EIP 1234"
+                        , carriage = "2"
+                        , seat = "32o"
+                        }
+                in
+                TicketParser.parseStrings ticketForNextYear
                     |> Expect.equal (Ok expectedTicket)
         ]
 
@@ -331,6 +346,100 @@ doubleTicketStrings =
         , "2019-07-09 11:41:32(11231233)"
         , "Ogółem PLN:"
         , "34,00"
+        , "Bilet internetowy jest biletem imiennym i jest ważny:"
+        , "a) wraz z dokumentem ze zdjęciem potwierdzającym tożsamość Podróżnego,"
+        , "b) tylko w dniu, relacji, pociągu, wagonie i na miejsce na nim oznaczone."
+        , "Zwrotu należności za niewykorzystany bilet dokonuje się na podstawie wniosku"
+        , "złożonego przez płatnika w wyznaczonych przez 'PKP Intercity' S.A. punktach, z"
+        , "wyjątkiem należności zwracanych automatycznie na zasadach określonych w"
+        , "Regulaminie e-IC."
+        , "Niniejszy bilet internetowy nie jest fakturą VAT."
+        , "W związku z przeprowadzanymi modernizacjami sieci kolejowej, uprzejmie prosimy o"
+        , "dokładne sprawdzanie rozkładu jazdy pociągów przed podróżą."
+        ]
+
+
+ticketForNextYear =
+    Array.fromList
+        [ "Data wydruku: 2019-11-01 21:32:31"
+        , "1234"
+        , "NORMAL. : "
+        , "1"
+        , "ULG. : "
+        , "   X : X"
+        , " OF: 1"
+        , "\"PKP Intercity\""
+        , "Spółka Akcyjna"
+        , "Przewoźnik: PKP IC"
+        , "BILET INTERNETOWY"
+        , "B-SuperPromo: 1xNormal"
+        , "¦"
+        , " ̧"
+        , "Od/From "
+        , ""
+        , "Do/To"
+        , "¦"
+        , " ̧"
+        , "KL./CL."
+        , "01.01"
+        , "*"
+        , "23:14"
+        , "*"
+        , "Foo"
+        , "*"
+        , ""
+        , "Bar"
+        , "*"
+        , "02.01"
+        , "*"
+        , "09:15"
+        , "*"
+        , "1"
+        , "*"
+        , "PRZEZ: Baz"
+        , "SUMA PLN:"
+        , "119,00 zł"
+        , "123456123556"
+        , "Nr biletu"
+        , ": eIC12312343"
+        , "(P24) 1111"
+        , "Informacje o podróży:"
+        , "Stacja"
+        , "Data"
+        , "Godzina"
+        , "/Wagon"
+        , "Km"
+        , "Nr miejsca"
+        , " (o-okno ś-środek k-korytarz)"
+        , "Suma PLN"
+        , "Foo"
+        , "Bar"
+        , "01.01"
+        , "02.01"
+        , "23:14"
+        , "09:15"
+        , "EIP 1234"
+        , "2"
+        , "293"
+        , "32o"
+        , "1 m. do siedzenia; wagon bez przedziałów"
+        , "119,00 zł"
+        , "Bilet, w dniu ważności, uprawnia do przejazdu bez dodatkowych opłat od st. Kraków: Pł."
+        , "do Gł. w poc. PKP IC (oprócz EIP) i wybranymi tramwajami ZTP  – spr. na intercity.pl"
+        , "r2R"
+        , "r2R"
+        , "Podróżny: Rafał Cieślak"
+        , "Informacja o cenie"
+        , "PTU"
+        , "Suma PLN"
+        , "Płatność: przelewem"
+        , "Opłata za przejazd:"
+        , " 8%"
+        , "119,00"
+        , "Zapłacono i wystawiono dnia:"
+        , "2019-10-20 12:29:31(11111111)"
+        , "Ogółem PLN:"
+        , "119,00"
         , "Bilet internetowy jest biletem imiennym i jest ważny:"
         , "a) wraz z dokumentem ze zdjęciem potwierdzającym tożsamość Podróżnego,"
         , "b) tylko w dniu, relacji, pociągu, wagonie i na miejsce na nim oznaczone."

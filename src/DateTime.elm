@@ -1,4 +1,4 @@
-module DateTime exposing (DateTime, fromList, toString)
+module DateTime exposing (DateTime, addOneYear, fromList, isGreaterThan, toString)
 
 
 type alias DateTime =
@@ -39,3 +39,35 @@ appendZero string =
 
     else
         string
+
+
+addOneYear : DateTime -> DateTime
+addOneYear dateTime =
+    { dateTime | year = dateTime.year + 1 }
+
+
+isGreaterThan : DateTime -> DateTime -> Bool
+isGreaterThan this other =
+    (this.year > other.year)
+        || (this.year == other.year && this.month > other.month)
+        || (this.year == other.year && this.month == other.month && this.day > other.day)
+        || (this.year
+                == other.year
+                && this.month
+                == other.month
+                && this.day
+                == other.day
+                && this.hour
+                > other.hour
+           )
+        || (this.year
+                == other.year
+                && this.month
+                == other.month
+                && this.day
+                == other.day
+                && this.hour
+                == other.hour
+                && this.min
+                > other.min
+           )

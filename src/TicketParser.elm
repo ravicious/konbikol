@@ -162,6 +162,23 @@ constructTicketDateTime purchaseDateTime date time =
         ]
         |> DateTime.fromList
         |> Result.fromMaybe ("Couldn't construct date time from " ++ date ++ " " ++ time)
+        |> Result.map
+            (\dateTime ->
+                {- By default we grab the year from the purchase date time for the departure or
+                   arrival date. However, if you buy a ticket on December 31st for January 2nd, we
+                   should say that the departure will be on the next year.
+
+                   You can't buy a ticket after the ride has started, so technically the purchase
+                   date time should never be greater than the parsed departure or arrival date. If
+                   that's the case, then it means that the departure or arrival will happen next
+                   year and we should add one year to that date time.
+                -}
+                if DateTime.isGreaterThan purchaseDateTime dateTime then
+                    DateTime.addOneYear dateTime
+
+                else
+                    dateTime
+            )
 
 
 constructTicket : RawTicketData -> DateTime -> DateTime -> Ticket
