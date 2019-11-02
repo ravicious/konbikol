@@ -2,12 +2,15 @@ port module Main exposing (main)
 
 import Array exposing (Array)
 import Browser
+import DateTime
 import File exposing (File)
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
 import Json.Decode as Decode
 import Json.Encode as Encode
+import Ticket exposing (Ticket)
+import TicketParser
 
 
 main =
@@ -20,7 +23,14 @@ main =
 
 
 type alias Model =
-    ()
+    { ticket : TicketStatus }
+
+
+type TicketStatus
+    = NotUploaded
+    | Parsing
+    | Success Ticket
+    | ParseError String
 
 
 type Msg
@@ -41,17 +51,24 @@ subscriptions _ =
 
 init : () -> ( Model, Cmd Msg )
 init _ =
-    ( (), Cmd.none )
+    ( { ticket = NotUploaded }, Cmd.none )
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
         GotFile file ->
-            ( model, parsePdf file )
+            ( { model | ticket = Parsing }, parsePdf file )
 
         GotPdfStrings strings ->
-            ( model, Cmd.none )
+            ( case TicketParser.parseStrings strings of
+                Ok ticket ->
+                    { model | ticket = Success ticket }
+
+                Err error ->
+                    { model | ticket = ParseError error }
+            , Cmd.none
+            )
 
 
 fileDecoder : Decode.Decoder Decode.Value
@@ -70,11 +87,31 @@ fileDecoder =
 
 view : Model -> Html Msg
 view model =
-    div []
-        [ input
-            [ type_ "file"
-            , accept "application/pdf"
-            , on "change" (Decode.map GotFile fileDecoder)
-            ]
-            []
+    case model.ticket of
+        NotUploaded ->
+            input
+                [ type_ "file"
+                , accept "application/pdf"
+                , on "change" (Decode.map GotFile fileDecoder)
+                ]
+                []
+
+        Parsing ->
+            text "Parsing ticket"
+
+        Success ticket ->
+            viewTicket ticket
+
+        ParseError message ->
+            text <| "Something went wrong: " ++ message
+
+
+viewTicket : Ticket -> Html Msg
+viewTicket ticket =
+    article []
+        [ p [] [ text <| ticket.departureStation ++ " → " ++ ticket.arrivalStation ]
+        , p []
+            [ text <| DateTime.toString ticket.departure ++ " → " ++ DateTime.toString ticket.arrival ]
+        , p [] [ text <| "🚂 " ++ ticket.train ]
+        , p [] [ text <| "🚃 " ++ ticket.carriage ++ " 💺 " ++ ticket.seat ]
         ]
