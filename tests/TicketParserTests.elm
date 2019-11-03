@@ -71,6 +71,21 @@ suite =
                 in
                 TicketParser.parseStrings ticketForNextYear
                     |> Expect.equal (Ok expectedTicket)
+        , test "handles a ticket with spaces around strings" <|
+            \_ ->
+                let
+                    expectedTicket =
+                        { departureStation = "Foo"
+                        , arrivalStation = "Bar Baz"
+                        , departure = DateTime 2019 11 2 9 0
+                        , arrival = DateTime 2019 11 2 10 0
+                        , train = "IC 1234"
+                        , carriage = "6"
+                        , seat = "15o"
+                        }
+                in
+                TicketParser.parseStrings ticketWithSpaces
+                    |> Expect.equal (Ok expectedTicket)
         ]
 
 
@@ -450,4 +465,93 @@ ticketForNextYear =
         , "Niniejszy bilet internetowy nie jest fakturą VAT."
         , "W związku z przeprowadzanymi modernizacjami sieci kolejowej, uprzejmie prosimy o"
         , "dokładne sprawdzanie rozkładu jazdy pociągów przed podróżą."
+        ]
+
+
+ticketWithSpaces =
+    Array.fromList
+        [ "Data wydruku: 2019-11-01 12:14:37"
+        , "1234"
+        , "NORMAL. : "
+        , "X"
+        , "ULG. : "
+        , "1"
+        , " OF: 1"
+        , "\"PKP Intercity\""
+        , "Spółka Akcyjna"
+        , "Przewoźnik: PKP IC"
+        , "BILET INTERNETOWY"
+        , "A-Cena bazowa: ULG.: 1x51% 99 STU/DOK"
+        , "Od/From "
+        , ""
+        , "Do/To"
+        , "KL./CL."
+        , "02.11"
+        , "*"
+        , "09:00"
+        , "*"
+        , "Foo                 "
+        , "*"
+        , ""
+        , "Bar Baz"
+        , "*"
+        , "02.11"
+        , "*"
+        , "10:00"
+        , "*"
+        , "2"
+        , "*"
+        , "PRZEZ: Fux * Fizz"
+        , "SUMA PLN:"
+        , "22,39 zł"
+        , "21312312931 "
+        , "Nr biletu"
+        , ": eIC12312312"
+        , "(P24) 1234"
+        , "Informacje o podróży:"
+        , "Stacja"
+        , "Data"
+        , "Godzina"
+        , "/Wagon"
+        , "Km"
+        , "Nr miejsca"
+        , " (o-okno ś-środek k-korytarz)"
+        , "Suma PLN"
+        , " Foo            "
+        , " Bar Baz"
+        , " 02.11 "
+        , "02.11 "
+        , " 09:00"
+        , "10:00 "
+        , "IC 1234"
+        , "6"
+        , "829"
+        , "15o"
+        , "1 m. do siedzenia; wagon bez przedziałów"
+        , "22,39 zł"
+        , "a1I"
+        , "a1I"
+        , "Podróżny: Foo"
+        , "Bar"
+        , "Informacja o cenie"
+        , "PTU"
+        , "Suma PLN"
+        , "Płatność: przelewem"
+        , "Opłata za przejazd:"
+        , " 8%"
+        , "22,39"
+        , "Zapłacono i wystawiono dnia:"
+        , "2019-11-01 11:32:29(11111111)"
+        , "Ogółem PLN:"
+        , "22,39"
+        , "Bilet internetowy jest biletem imiennym i jest ważny:"
+        , "a) wraz z dokumentem ze zdjęciem potwierdzającym tożsamość Podróżnego,"
+        , "b) tylko w dniu, relacji, pociągu, wagonie i na miejsce na nim oznaczone."
+        , "Zwrotu należności za niewykorzystany bilet dokonuje się na podstawie"
+        , "wniosku złożonego przez płatnika w wyznaczonych przez 'PKP Intercity'"
+        , "S.A. punktach, z wyjątkiem należności zwracanych automatycznie na"
+        , "zasadach określonych w Regulaminie e-IC."
+        , "Niniejszy bilet internetowy nie jest fakturą VAT."
+        , "W związku z przeprowadzanymi modernizacjami sieci kolejowej, uprzejmie"
+        , "prosimy o dokładne sprawdzanie rozkładu jazdy pociągów przed podróżą."
         ]
