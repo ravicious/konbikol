@@ -146,7 +146,8 @@ view model =
     case model.ticket of
         NotUploaded ->
             article []
-                [ p [] [ text "Please select a PDF file with the ticket." ]
+                [ p [] [ text "konbikol converts PKP Intercity tickets to iCalendar events." ]
+                , p [] [ text "Please select a PDF file with the ticket." ]
                 , p [] [ text "The ticket isn't sent to any server, all processing is done on your device." ]
                 , label []
                     [ text "PDF file"
