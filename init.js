@@ -19,6 +19,16 @@ app.ports.parsePdf.subscribe(function(file) {
   })
 })
 
+if (window.location.search.includes("debug")) {
+  getPdfTextFromPdfJsInput('ticket.pdf').then(function(textArray) {
+    console.group("text array from pdf.js")
+    console.log(textArray)
+    console.groupEnd()
+
+    app.ports.extractedTextFromPdf.send(textArray)
+  }, console.error)
+}
+
 app.ports.downloadEvent.subscribe(function(event) {
   var cal = ics(event.uid, 'konbikol')
   var start = dateTimeToDate(event.start)
@@ -34,19 +44,23 @@ function getPdfTextFromFile(file) {
 
     fileReader.onload = function() {
       var typedArray = this.result
-      var pdf = pdfjsLib.getDocument(typedArray).promise
 
-      resolve(pdf.then(function(pdf) {
-        return pdf.getPage(1)
-      }).then(function(page) {
-        return page.getTextContent()
-      }).then(function(textContent) {
-        return textContent.items.map(function (s) { return s.str })
-      })
-      )
+      resolve(getPdfTextFromPdfJsInput(typedArray))
     }
 
     fileReader.readAsArrayBuffer(file)
+  })
+}
+
+function getPdfTextFromPdfJsInput(input) {
+  var pdf = pdfjsLib.getDocument(input).promise
+
+  return pdf.then(function(pdf) {
+    return pdf.getPage(1)
+  }).then(function(page) {
+    return page.getTextContent()
+  }).then(function(textContent) {
+    return textContent.items.map(function (s) { return s.str })
   })
 }
 

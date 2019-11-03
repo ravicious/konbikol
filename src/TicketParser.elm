@@ -103,7 +103,9 @@ captureIndex index ( strings, result ) =
         (\recordFunction ->
             Array.get index strings
                 |> Result.fromMaybe ("Index out of bounds (" ++ String.fromInt index ++ ")")
-                |> Result.map recordFunction
+                -- Spaces around strings are unimportant, but PKP sometimes adds them after
+                -- stations.
+                |> Result.map (String.trim >> recordFunction)
         )
         result
     )
