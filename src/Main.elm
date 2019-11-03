@@ -112,13 +112,16 @@ view model =
                 ]
 
         Parsing ->
-            text "Parsing ticket"
+            viewTicketPlaceholder
 
         Success ticket ->
             viewTicket ticket
 
         ParseError message ->
-            text <| "Something went wrong: " ++ message
+            div []
+                [ p [] [ text <| "Something went wrong: " ++ message ]
+                , button [ onClick ResetApp ] [ text "Select another ticket" ]
+                ]
 
 
 viewTicket : Ticket -> Html Msg
@@ -136,3 +139,20 @@ viewTicket ticket =
             [ text "Add event to calendar" ]
         , button [ onClick ResetApp ] [ text "Select another ticket" ]
         ]
+
+
+viewTicketPlaceholder : Html Msg
+viewTicketPlaceholder =
+    article []
+        [ p [] [ text <| placeholder 6 ++ " → " ++ placeholder 6 ]
+        , p []
+            [ text <| placeholder 7 ++ " → " ++ placeholder 7 ]
+        , p [] [ text <| "🚂 " ++ placeholder 4 ]
+        , p [] [ text <| "🚃 " ++ placeholder 1 ++ " 💺 " ++ placeholder 1 ]
+        , p [] [ text "Processing the ticket" ]
+        ]
+
+
+placeholder : Int -> String
+placeholder n =
+    String.repeat n "█"
