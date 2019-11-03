@@ -38,6 +38,7 @@ type Msg
     = GotFile Decode.Value
     | GotPdfStrings (Array String)
     | DownloadTicket Ticket
+    | ResetApp
 
 
 port parsePdf : Encode.Value -> Cmd msg
@@ -77,6 +78,9 @@ update msg model =
 
         DownloadTicket ticket ->
             ( model, downloadEvent <| Ticket.toCalendarEvent ticket )
+
+        ResetApp ->
+            init ()
 
 
 fileDecoder : Decode.Decoder Decode.Value
@@ -130,4 +134,5 @@ viewTicket ticket =
             , onClick (DownloadTicket ticket)
             ]
             [ text "Add event to calendar" ]
+        , button [ onClick ResetApp ] [ text "Select another ticket" ]
         ]
