@@ -12,6 +12,7 @@ import Json.Decode as Decode
 import Json.Encode as Encode
 import Ticket exposing (Ticket)
 import TicketParser
+import Time
 
 
 main =
@@ -24,7 +25,9 @@ main =
 
 
 type alias Model =
-    { ticket : TicketStatus }
+    { ticket : TicketStatus
+    , placeholderCharacter : String
+    }
 
 
 type TicketStatus
@@ -39,6 +42,7 @@ type Msg
     | GotPdfStrings (Array String)
     | DownloadTicket Ticket
     | ResetApp
+    | SetPlaceholderCharacter String
 
 
 port parsePdf : Encode.Value -> Cmd msg
@@ -51,13 +55,50 @@ port extractedTextFromPdf : (Array String -> msg) -> Sub msg
 
 
 subscriptions : Model -> Sub Msg
-subscriptions _ =
-    extractedTextFromPdf GotPdfStrings
+subscriptions model =
+    let
+        togglePlaceholderSub =
+            case model.ticket of
+                Parsing ->
+                    Time.every 500 (\_ -> togglePlaceholderCharacter model.placeholderCharacter)
+
+                _ ->
+                    Sub.none
+    in
+    Sub.batch
+        [ extractedTextFromPdf GotPdfStrings
+        , togglePlaceholderSub
+        ]
+
+
+character1 =
+    "░"
+
+
+character2 =
+    "▒"
+
+
+togglePlaceholderCharacter : String -> Msg
+togglePlaceholderCharacter char =
+    let
+        newChar =
+            if char == character1 then
+                character2
+
+            else
+                character1
+    in
+    SetPlaceholderCharacter newChar
 
 
 init : () -> ( Model, Cmd Msg )
 init _ =
-    ( { ticket = NotUploaded }, Cmd.none )
+    ( { ticket = NotUploaded
+      , placeholderCharacter = character1
+      }
+    , Cmd.none
+    )
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -81,6 +122,9 @@ update msg model =
 
         ResetApp ->
             init ()
+
+        SetPlaceholderCharacter character ->
+            ( { model | placeholderCharacter = character }, Cmd.none )
 
 
 fileDecoder : Decode.Decoder Decode.Value
@@ -116,7 +160,7 @@ view model =
                 ]
 
         Parsing ->
-            viewTicketPlaceholder
+            viewTicketPlaceholder model.placeholderCharacter
 
         Success ticket ->
             viewTicket ticket
@@ -145,18 +189,21 @@ viewTicket ticket =
         ]
 
 
-viewTicketPlaceholder : Html Msg
-viewTicketPlaceholder =
+viewTicketPlaceholder : String -> Html Msg
+viewTicketPlaceholder character =
+    let
+        placeholder =
+            createPlaceholder character
+    in
     article []
         [ p [] [ text <| placeholder 6 ++ " → " ++ placeholder 6 ]
-        , p []
-            [ text <| placeholder 7 ++ " → " ++ placeholder 7 ]
-        , p [] [ text <| "🚂 " ++ placeholder 4 ]
-        , p [] [ text <| "🚃 " ++ placeholder 1 ++ " 💺 " ++ placeholder 1 ]
+        , p [] [ text <| placeholder 10 ++ " → " ++ placeholder 10 ]
+        , p [] [ text <| "🚂 " ++ placeholder 6 ]
+        , p [] [ text <| "🚃 " ++ placeholder 1 ++ " 💺 " ++ placeholder 2 ]
         , p [] [ text "Processing the ticket" ]
         ]
 
 
-placeholder : Int -> String
-placeholder n =
-    String.repeat n "█"
+createPlaceholder : String -> Int -> String
+createPlaceholder s n =
+    String.repeat n s
