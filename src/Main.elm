@@ -2,6 +2,7 @@ port module Main exposing (main)
 
 import Array exposing (Array)
 import Browser
+import CalendarEvent exposing (CalendarEvent)
 import DateTime
 import File exposing (File)
 import Html exposing (..)
@@ -36,9 +37,13 @@ type TicketStatus
 type Msg
     = GotFile Decode.Value
     | GotPdfStrings (Array String)
+    | DownloadTicket Ticket
 
 
 port parsePdf : Encode.Value -> Cmd msg
+
+
+port downloadEvent : CalendarEvent -> Cmd msg
 
 
 port extractedTextFromPdf : (Array String -> msg) -> Sub msg
@@ -70,6 +75,9 @@ update msg model =
             , Cmd.none
             )
 
+        DownloadTicket ticket ->
+            ( model, downloadEvent <| Ticket.toCalendarEvent ticket )
+
 
 fileDecoder : Decode.Decoder Decode.Value
 fileDecoder =
@@ -89,12 +97,15 @@ view : Model -> Html Msg
 view model =
     case model.ticket of
         NotUploaded ->
-            input
-                [ type_ "file"
-                , accept "application/pdf"
-                , on "change" (Decode.map GotFile fileDecoder)
+            article []
+                [ p [] [ text "Please select a PDF file with the ticket." ]
+                , input
+                    [ type_ "file"
+                    , accept "application/pdf"
+                    , on "change" (Decode.map GotFile fileDecoder)
+                    ]
+                    []
                 ]
-                []
 
         Parsing ->
             text "Parsing ticket"
@@ -114,4 +125,9 @@ viewTicket ticket =
             [ text <| DateTime.toString ticket.departure ++ " → " ++ DateTime.toString ticket.arrival ]
         , p [] [ text <| "🚂 " ++ ticket.train ]
         , p [] [ text <| "🚃 " ++ ticket.carriage ++ " 💺 " ++ ticket.seat ]
+        , button
+            [ style "font-weight" "bold"
+            , onClick (DownloadTicket ticket)
+            ]
+            [ text "Add event to calendar" ]
         ]

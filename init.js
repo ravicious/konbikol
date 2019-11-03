@@ -19,6 +19,15 @@ app.ports.parsePdf.subscribe(function(file) {
   })
 })
 
+app.ports.downloadEvent.subscribe(function(event) {
+  var cal = ics(event.uid, 'konbikol')
+  var start = dateTimeToDate(event.start)
+  var end = dateTimeToDate(event.end)
+
+  cal.addEvent(event.subject, event.description, event.location, start, end)
+  openCal(cal, event.subject)
+})
+
 function getPdfTextFromFile(file) {
   return new Promise(function(resolve, reject) {
     var fileReader = new FileReader()
@@ -39,4 +48,22 @@ function getPdfTextFromFile(file) {
 
     fileReader.readAsArrayBuffer(file)
   })
+}
+
+function dateTimeToDate(dateTime) {
+  return new Date(dateTime.year, dateTime.month - 1, dateTime.day, dateTime.hour, dateTime.min)
+}
+
+// `cal.download()` would always save the file, even on iOS.  So then I tried `window.open` with
+// what's currently under `link.href`. That worked on iOS, but on the desktop it downloaded an
+// unnamed .ics file.
+// By using an <a> tag, you can add an event directly to a calendar on iOS and on the desktop it'll
+// either ask to open the event in a calendar (Firefox) or just download the file (Safari, Chrome).
+//
+// https://stackoverflow.com/a/7034818/742872
+function openCal(cal, filename) {
+  var link = document.createElement("a")
+  link.href = "data:text/calendar;charset=utf8," + encodeURIComponent(cal.build())
+  link.download = filename + ".ics"
+  link.click()
 }
