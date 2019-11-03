@@ -19,7 +19,7 @@ app.ports.parsePdf.subscribe(function(file) {
   })
 })
 
-if (window.location.search.includes("debug")) {
+if (window.location.hash.includes("debug")) {
   getPdfTextFromPdfJsInput('ticket.pdf').then(function(textArray) {
     console.group("text array from pdf.js")
     console.log(textArray)
