@@ -103,12 +103,16 @@ view model =
         NotUploaded ->
             article []
                 [ p [] [ text "Please select a PDF file with the ticket." ]
+                , p [] [ text "The ticket isn't sent to any server, all processing is done on your device." ]
                 , input
                     [ type_ "file"
                     , accept "application/pdf"
                     , on "change" (Decode.map GotFile fileDecoder)
                     ]
                     []
+                , p []
+                    [ a [ href "https://github.com/ravicious/konbikol" ] [ text "Source code" ]
+                    ]
                 ]
 
         Parsing ->
