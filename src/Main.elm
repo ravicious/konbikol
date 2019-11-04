@@ -180,8 +180,8 @@ viewTicket : Ticket -> Html Msg
 viewTicket ticket =
     article []
         [ p [] [ text <| ticket.departureStation ++ " → " ++ ticket.arrivalStation ]
-        , p []
-            [ text <| DateTime.toString ticket.departure ++ " → " ++ DateTime.toString ticket.arrival ]
+        , time [] [ text <| DateTime.toString ticket.departure ]
+        , time [] [ text <| DateTime.toString ticket.arrival ]
         , p [] [ text <| "🚂 " ++ ticket.train ]
         , p [] [ text <| "🚃 " ++ ticket.carriage ++ " 💺 " ++ ticket.seat ]
         , button
@@ -201,7 +201,8 @@ viewTicketPlaceholder character =
     in
     article []
         [ p [] [ text <| placeholder 6 ++ " → " ++ placeholder 6 ]
-        , p [] [ text <| placeholder 10 ++ " → " ++ placeholder 10 ]
+        , time [] [ text <| placeholder 10 ]
+        , time [] [ text <| placeholder 10 ]
         , p [] [ text <| "🚂 " ++ placeholder 6 ]
         , p [] [ text <| "🚃 " ++ placeholder 1 ++ " 💺 " ++ placeholder 2 ]
         , p [] [ text "Processing the ticket" ]
