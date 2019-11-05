@@ -7,10 +7,10 @@ yarn
 yarn dev-server
 ```
 
-To compile & publish the minified version:
+To compile & commit an updated & minified version on GitHub Pages:
 
 ```
-git checkout gh-pages && git merge master && yarn compile-min && git commit -am "Publish updated version"
+yarn release
 ```
 
 To debug a ticket that's causing problems, put it in the root directory as `ticket.pdf`, run the dev
