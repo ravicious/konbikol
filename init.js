@@ -68,6 +68,12 @@ function dateTimeToDate(dateTime) {
   return new Date(dateTime.year, dateTime.month - 1, dateTime.day, dateTime.hour, dateTime.min)
 }
 
+var europeWarsawTimeZoneData = "BEGIN:VTIMEZONE\r\nTZID:Europe/Warsaw\r\nBEGIN:DAYLIGHT\r\nDTSTART:19770101T000000\r\nTZOFFSETFROM:+0100\r\nTZOFFSETTO:+0100\r\nRRULE:FREQ=YEARLY;BYDAY=1SA;BYMONTH=1\r\nTZNAME:CET\r\nEND:DAYLIGHT\r\nBEGIN:STANDARD\r\nDTSTART:19640927T010000\r\nTZOFFSETFROM:+0200\r\nTZOFFSETTO:+0100\r\nRRULE:FREQ=YEARLY;BYDAY=-1SU;BYMONTH=9\r\nTZNAME:CET\r\nEND:STANDARD\r\nEND:VTIMEZONE"
+
+function addTimeZoneData(icsContent) {
+  return icsContent.replace("VERSION:2.0\r\n", "VERSION:2.0\r\n" + europeWarsawTimeZoneData + "\r\n")
+}
+
 // `cal.download()` would always save the file, even on iOS.  So then I tried `window.open` with
 // what's currently under `link.href`. That worked on iOS, but on the desktop it downloaded an
 // unnamed .ics file.
@@ -77,7 +83,8 @@ function dateTimeToDate(dateTime) {
 // https://stackoverflow.com/a/7034818/742872
 function openCal(cal, filename) {
   var link = document.createElement("a")
-  link.href = "data:text/calendar;charset=utf8," + encodeURIComponent(cal.build())
+  var icsContent = addTimeZoneData(cal.build())
+  link.href = "data:text/calendar;charset=utf8," + encodeURIComponent(icsContent)
   link.download = filename + ".ics"
   link.click()
 }
