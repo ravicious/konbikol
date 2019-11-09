@@ -4,7 +4,7 @@ var app = Elm.Main.init({
   node: document.getElementById('app-container')
 })
 
-var pdfjsLib = window['pdfjs-dist/build/pdf']
+var pdfjsLoadPromise = loadJsFile('vendor/pdf.min.js')
 
 app.ports.parsePdf.subscribe(function(file) {
   getPdfTextFromFile(file).then(function(textArray) {
@@ -53,9 +53,10 @@ function getPdfTextFromFile(file) {
 }
 
 function getPdfTextFromPdfJsInput(input) {
-  var pdf = pdfjsLib.getDocument(input).promise
-
-  return pdf.then(function(pdf) {
+  return pdfjsLoadPromise.then(function() {
+    var pdfjsLib = window['pdfjs-dist/build/pdf']
+    return pdfjsLib.getDocument(input).promise
+  }).then(function(pdf) {
     return pdf.getPage(1)
   }).then(function(page) {
     return page.getTextContent()
@@ -87,4 +88,24 @@ function openCal(cal, filename) {
   link.href = "data:text/calendar;charset=utf8," + encodeURIComponent(icsContent)
   link.download = filename + ".ics"
   link.click()
+}
+
+function loadJsFile(url) {
+  return new Promise(function(resolve, reject) {
+    // Without the timeout, page rendering would still be blocked until the script gets loaded.
+    setTimeout(function() {
+      var element = document.createElement('script')
+
+      element.src = url
+
+      element.onload = function() {
+        resolve(url)
+      }
+      element.onerror = function() {
+        reject(url)
+      }
+
+      document.body.appendChild(element)
+    }, 1)
+  })
 }
