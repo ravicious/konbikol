@@ -18,96 +18,131 @@ type alias RawTicketData =
     , carriage : String
     , seat : String
     , purchaseDateTime : String
+    , travelClass : String
+    }
+
+
+type alias StringsContext =
+    { importantStrings : Array String
+    , allStrings : Array String
     }
 
 
 parseStrings : Array String -> Result String Ticket
 parseStrings strings =
     let
+        stringsList =
+            Array.toList strings
+
         {- The strings that follow "Informacje o podróży:" have presumably constant order and
            contain details that we need to construct a ticket.
         -}
         importantStrings =
-            Array.toList strings
+            stringsList
                 |> List.Extra.dropWhile (\string -> string /= "Informacje o podróży:")
                 |> Array.fromList
 
         -- Purchase time helps us to determine what year the departure and the arrival are.
-        maybeIndexOfPurchaseDateTime =
-            importantStrings
-                |> Array.toList
+        indexOfPurchaseDateTime =
+            stringsList
                 |> List.Extra.findIndex (\string -> string == "Zapłacono i wystawiono dnia:")
                 |> Maybe.map ((+) 1)
+                |> Result.fromMaybe "No purchase time found (was looking for \"Zapłacono i wystawiono dnia:\" in the ticket)"
+
+        indexOfTravelClass =
+            stringsList
+                |> List.Extra.findIndex (\string -> String.startsWith "PRZEZ:" string)
+                |> Maybe.map (\i -> i - 2)
+                |> Result.fromMaybe "No string starting with \"PRZEZ:\" found, which is needed for determining travel class"
+
+        stringsContext =
+            { importantStrings = importantStrings, allStrings = strings }
+
+        {- Since we know the order of strings upfront, we extract the useful bits of
+           information here and fail as soon as there's a problem with extracting any of them.
+        -}
+        rawTicketData =
+            ( stringsContext, Ok RawTicketData )
+                |> captureImportantStringsIndex 9
+                |> captureImportantStringsIndex 10
+                |> captureImportantStringsIndex 11
+                |> captureImportantStringsIndex 12
+                |> captureImportantStringsIndex 13
+                |> captureImportantStringsIndex 14
+                |> captureImportantStringsIndex 15
+                |> captureImportantStringsIndex 16
+                |> captureImportantStringsIndex 18
+                |> captureUnsafeAllStringsIndex indexOfPurchaseDateTime
+                |> captureUnsafeAllStringsIndex indexOfTravelClass
+                |> Tuple.second
+                |> Result.andThen cleanupPurchaseDateTime
+
+        purchaseDateTime =
+            rawTicketData
+                |> Result.map .purchaseDateTime
+                |> Result.andThen parsePurchaseDateTime
+
+        departureDateTime =
+            Result.map2 Tuple.pair rawTicketData purchaseDateTime
+                |> Result.andThen
+                    (\( rawTicketData_, purchaseDateTime_ ) ->
+                        constructTicketDateTime
+                            purchaseDateTime_
+                            rawTicketData_.departureDate
+                            rawTicketData_.departureTime
+                    )
+
+        arrivalDateTime =
+            Result.map2 Tuple.pair rawTicketData purchaseDateTime
+                |> Result.andThen
+                    (\( rawTicketData_, purchaseDateTime_ ) ->
+                        constructTicketDateTime
+                            purchaseDateTime_
+                            rawTicketData_.arrivalDate
+                            rawTicketData_.arrivalTime
+                    )
     in
-    case maybeIndexOfPurchaseDateTime of
-        Nothing ->
-            Err "No purchase time found (was looking for \"Zapłacono i wystawiono dnia:\" in the ticket)"
-
-        Just indexOfPurchaseDateTime ->
-            let
-                {- Since we know the order of strings upfront, we extract the useful bits of
-                   information here and fail as soon as there's a problem with extracting any of
-                   them.
-                -}
-                rawTicketData =
-                    -- Use a tuple so that we don't have to repeat importantStrings over and over.
-                    ( importantStrings, Ok RawTicketData )
-                        |> captureIndex 9
-                        |> captureIndex 10
-                        |> captureIndex 11
-                        |> captureIndex 12
-                        |> captureIndex 13
-                        |> captureIndex 14
-                        |> captureIndex 15
-                        |> captureIndex 16
-                        |> captureIndex 18
-                        |> captureIndex indexOfPurchaseDateTime
-                        |> Tuple.second
-                        |> Result.andThen cleanupPurchaseDateTime
-
-                purchaseDateTime =
-                    rawTicketData
-                        |> Result.map .purchaseDateTime
-                        |> Result.andThen parsePurchaseDateTime
-
-                departureDateTime =
-                    Result.map2 Tuple.pair rawTicketData purchaseDateTime
-                        |> Result.andThen
-                            (\( rawTicketData_, purchaseDateTime_ ) ->
-                                constructTicketDateTime
-                                    purchaseDateTime_
-                                    rawTicketData_.departureDate
-                                    rawTicketData_.departureTime
-                            )
-
-                arrivalDateTime =
-                    Result.map2 Tuple.pair rawTicketData purchaseDateTime
-                        |> Result.andThen
-                            (\( rawTicketData_, purchaseDateTime_ ) ->
-                                constructTicketDateTime
-                                    purchaseDateTime_
-                                    rawTicketData_.arrivalDate
-                                    rawTicketData_.arrivalTime
-                            )
-            in
-            Result.map3 constructTicket rawTicketData departureDateTime arrivalDateTime
+    Result.map3 constructTicket rawTicketData departureDateTime arrivalDateTime
 
 
 {-| Allows us to capture indexes from the strings array in a pipeline style. Inside the result
 there's a function which composes a record, in this case RawTicketData.
 -}
-captureIndex : Int -> ( Array String, Result String (String -> a) ) -> ( Array String, Result String a )
-captureIndex index ( strings, result ) =
-    ( strings
+captureImportantStringsIndex : Int -> ( StringsContext, Result String (String -> a) ) -> ( StringsContext, Result String a )
+captureImportantStringsIndex index ( { importantStrings } as stringsContext, result ) =
+    ( stringsContext
     , Result.andThen
         (\recordFunction ->
-            Array.get index strings
-                |> Result.fromMaybe ("Index out of bounds (" ++ String.fromInt index ++ ")")
+            Array.get index importantStrings
+                |> Result.fromMaybe ("importantStrings index out of bounds (" ++ String.fromInt index ++ ")")
                 -- Spaces around strings are unimportant, but PKP sometimes adds them after
                 -- stations.
                 |> Result.map (String.trim >> recordFunction)
         )
         result
+    )
+
+
+{-| Captures content under an index. That index is usually calculated based on the index of a
+specific string in the ticket. That's why we use Result for index in case that string wasn't found.
+-}
+captureUnsafeAllStringsIndex : Result String Int -> ( StringsContext, Result String (String -> a) ) -> ( StringsContext, Result String a )
+captureUnsafeAllStringsIndex resultIndex ( { allStrings } as stringsContext, result ) =
+    let
+        updatedResult =
+            Result.map2 Tuple.pair resultIndex result
+                |> Result.andThen
+                    (\( index, recordFunction ) ->
+                        Array.get index allStrings
+                            |> Result.fromMaybe
+                                ("allStrings index out of bounds (" ++ String.fromInt index ++ ")")
+                            -- Spaces around strings are unimportant, but PKP sometimes adds them
+                            -- after stations.
+                            |> Result.map (String.trim >> recordFunction)
+                    )
+    in
+    ( stringsContext
+    , updatedResult
     )
 
 
@@ -192,6 +227,7 @@ constructTicket rawTicketData departureDateTime arrivalDateTime =
     , train = rawTicketData.train
     , carriage = rawTicketData.carriage
     , seat = rawTicketData.seat
+    , travelClass = rawTicketData.travelClass
     }
 
 

@@ -13,6 +13,7 @@ type alias Ticket =
     , train : String
     , carriage : String
     , seat : String
+    , travelClass : String
     }
 
 

@@ -22,6 +22,7 @@ suite =
                         , train = "TLK 12345"
                         , carriage = "13"
                         , seat = "35o"
+                        , travelClass = "2"
                         }
                 in
                 TicketParser.parseStrings regularTicketStrings
@@ -37,6 +38,7 @@ suite =
                         , train = "TLK 12345"
                         , carriage = "10"
                         , seat = "25o"
+                        , travelClass = "2"
                         }
                 in
                 TicketParser.parseStrings differentDaysTicketStrings
@@ -52,6 +54,7 @@ suite =
                         , train = "TLK 12345"
                         , carriage = "10"
                         , seat = "56o, 55o"
+                        , travelClass = "2"
                         }
                 in
                 TicketParser.parseStrings doubleTicketStrings
@@ -67,6 +70,7 @@ suite =
                         , train = "EIP 1234"
                         , carriage = "2"
                         , seat = "32o"
+                        , travelClass = "1"
                         }
                 in
                 TicketParser.parseStrings ticketForNextYear
@@ -82,6 +86,7 @@ suite =
                         , train = "IC 1234"
                         , carriage = "6"
                         , seat = "15o"
+                        , travelClass = "2"
                         }
                 in
                 TicketParser.parseStrings ticketWithSpaces
