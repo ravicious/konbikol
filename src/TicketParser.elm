@@ -4,6 +4,7 @@ import Array exposing (Array)
 import DateTime exposing (DateTime)
 import List.Extra
 import Maybe.Extra
+import String.Extra
 import Ticket exposing (Ticket)
 
 
@@ -16,6 +17,7 @@ type alias RawTicketData =
     , arrivalTime : String
     , train : String
     , carriageNumber : String
+    , carriageType : String
     , seat : String
     , purchaseDateTime : String
     , travelClass : String
@@ -71,6 +73,7 @@ parseStrings strings =
                 |> captureImportantStringsIndex 14
                 |> captureImportantStringsIndex 15
                 |> captureImportantStringsIndex 16
+                |> captureImportantStringsIndex 19
                 |> captureImportantStringsIndex 18
                 |> captureUnsafeAllStringsIndex indexOfPurchaseDateTime
                 |> captureUnsafeAllStringsIndex indexOfTravelClass
@@ -226,6 +229,9 @@ constructTicket rawTicketData departureDateTime arrivalDateTime =
     , arrivalStation = rawTicketData.arrivalStation
     , train = rawTicketData.train
     , carriageNumber = rawTicketData.carriageNumber
+    , carriageType =
+        -- "1 m. do siedzenia; wagon bez przedziałów" -> "wagon bez przedziałów"
+        rawTicketData.carriageType |> String.Extra.rightOf "; "
     , seat = rawTicketData.seat
     , travelClass = rawTicketData.travelClass
     }

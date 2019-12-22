@@ -23,6 +23,7 @@ suite =
                         , carriageNumber = "13"
                         , seat = "35o"
                         , travelClass = "2"
+                        , carriageType = "wagon z przedziałami"
                         }
                 in
                 TicketParser.parseStrings regularTicketStrings
@@ -39,6 +40,7 @@ suite =
                         , carriageNumber = "10"
                         , seat = "25o"
                         , travelClass = "2"
+                        , carriageType = "wagon z przedziałami"
                         }
                 in
                 TicketParser.parseStrings differentDaysTicketStrings
@@ -55,6 +57,7 @@ suite =
                         , carriageNumber = "10"
                         , seat = "56o, 55o"
                         , travelClass = "2"
+                        , carriageType = "wagon bez przedziałów"
                         }
                 in
                 TicketParser.parseStrings doubleTicketStrings
@@ -71,6 +74,7 @@ suite =
                         , carriageNumber = "2"
                         , seat = "32o"
                         , travelClass = "1"
+                        , carriageType = "wagon bez przedziałów"
                         }
                 in
                 TicketParser.parseStrings ticketForNextYear
@@ -87,6 +91,7 @@ suite =
                         , carriageNumber = "6"
                         , seat = "15o"
                         , travelClass = "2"
+                        , carriageType = "wagon bez przedziałów"
                         }
                 in
                 TicketParser.parseStrings ticketWithSpaces
