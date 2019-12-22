@@ -214,6 +214,7 @@ viewTicketDetails maybeTicket placeholderCharacter =
     , time [] [ text <| field 10 (.arrival >> DateTime.toString) ]
     , p [] [ text <| "🚂 " ++ field 6 .train ]
     , p [] [ text <| "🚃 " ++ field 1 .carriageNumber ++ " 💺 " ++ field 2 .seat ]
+    , p [ class "details" ] [ text <| "klasa " ++ field 1 .travelClass ++ ", " ++ field 12 .carriageType ]
     ]
 
 

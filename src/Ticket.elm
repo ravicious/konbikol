@@ -35,9 +35,16 @@ toCalendarEvent ticket =
         subject =
             ticket.departureStation ++ " → " ++ ticket.arrivalStation
 
-        -- ics.js doesn't handle newlines in event description, so we have to escape that \n.
+        trainCarriageNumberAndSeat =
+            "🚂 " ++ ticket.train ++ "\n🚃 " ++ ticket.carriageNumber ++ " 💺 " ++ ticket.seat
+
+        travelClassAndCarriageType =
+            "klasa " ++ ticket.travelClass ++ ", " ++ ticket.carriageType
+
         description =
-            "🚂 " ++ ticket.train ++ "\\n🚃 " ++ ticket.carriageNumber ++ " 💺 " ++ ticket.seat
+            (trainCarriageNumberAndSeat ++ "\n" ++ travelClassAndCarriageType)
+                -- ics.js doesn't handle newlines in event description, so we have to escape them.
+                |> String.replace "\n" "\\n"
     in
     { subject = subject
     , description = description
