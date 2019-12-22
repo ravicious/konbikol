@@ -20,8 +20,10 @@ suite =
                         , departure = DateTime 2018 11 4 13 25
                         , arrival = DateTime 2018 11 4 20 22
                         , train = "TLK 12345"
-                        , carriage = "13"
+                        , carriageNumber = "13"
                         , seat = "35o"
+                        , travelClass = "2"
+                        , carriageType = "wagon z przedziałami"
                         }
                 in
                 TicketParser.parseStrings regularTicketStrings
@@ -35,8 +37,10 @@ suite =
                         , departure = DateTime 2018 12 28 12 25
                         , arrival = DateTime 2018 12 29 21 17
                         , train = "TLK 12345"
-                        , carriage = "10"
+                        , carriageNumber = "10"
                         , seat = "25o"
+                        , travelClass = "2"
+                        , carriageType = "wagon z przedziałami"
                         }
                 in
                 TicketParser.parseStrings differentDaysTicketStrings
@@ -50,8 +54,10 @@ suite =
                         , departure = DateTime 2019 8 4 12 12
                         , arrival = DateTime 2019 8 4 21 17
                         , train = "TLK 12345"
-                        , carriage = "10"
+                        , carriageNumber = "10"
                         , seat = "56o, 55o"
+                        , travelClass = "2"
+                        , carriageType = "wagon bez przedziałów"
                         }
                 in
                 TicketParser.parseStrings doubleTicketStrings
@@ -65,8 +71,10 @@ suite =
                         , departure = DateTime 2020 1 1 23 14
                         , arrival = DateTime 2020 1 2 9 15
                         , train = "EIP 1234"
-                        , carriage = "2"
+                        , carriageNumber = "2"
                         , seat = "32o"
+                        , travelClass = "1"
+                        , carriageType = "wagon bez przedziałów"
                         }
                 in
                 TicketParser.parseStrings ticketForNextYear
@@ -80,8 +88,10 @@ suite =
                         , departure = DateTime 2019 11 2 9 0
                         , arrival = DateTime 2019 11 2 10 0
                         , train = "IC 1234"
-                        , carriage = "6"
+                        , carriageNumber = "6"
                         , seat = "15o"
+                        , travelClass = "2"
+                        , carriageType = "wagon bez przedziałów"
                         }
                 in
                 TicketParser.parseStrings ticketWithSpaces

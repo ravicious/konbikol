@@ -164,7 +164,7 @@ view model =
                 ]
 
         Parsing ->
-            viewTicketPlaceholder model.placeholderCharacter
+            viewParsingScreen model.placeholderCharacter
 
         Success ticket ->
             viewTicket ticket
@@ -178,37 +178,48 @@ view model =
 
 viewTicket : Ticket -> Html Msg
 viewTicket ticket =
-    article []
-        [ p [] [ text <| ticket.departureStation ++ " → " ++ ticket.arrivalStation ]
-        , time [] [ text <| DateTime.toString ticket.departure ]
-        , time [] [ text <| DateTime.toString ticket.arrival ]
-        , p [] [ text <| "🚂 " ++ ticket.train ]
-        , p [] [ text <| "🚃 " ++ ticket.carriage ++ " 💺 " ++ ticket.seat ]
-        , button
-            [ style "font-weight" "bold"
-            , onClick (DownloadTicket ticket)
-            ]
-            [ text "Add event to calendar" ]
-        , button [ onClick ResetApp ] [ text "Select another ticket" ]
-        ]
-
-
-viewTicketPlaceholder : String -> Html Msg
-viewTicketPlaceholder character =
     let
-        placeholder =
-            createPlaceholder character
+        ticketDetails =
+            viewTicketDetails (Just ticket) ""
     in
-    article []
-        [ p [] [ text <| placeholder 6 ++ " → " ++ placeholder 6 ]
-        , time [] [ text <| placeholder 10 ]
-        , time [] [ text <| placeholder 10 ]
-        , p [] [ text <| "🚂 " ++ placeholder 6 ]
-        , p [] [ text <| "🚃 " ++ placeholder 1 ++ " 💺 " ++ placeholder 2 ]
-        , p [] [ text "Processing the ticket" ]
-        ]
+    article [] <|
+        ticketDetails
+            ++ [ button
+                    [ style "font-weight" "bold", onClick (DownloadTicket ticket) ]
+                    [ text "Add event to calendar" ]
+               , button [ onClick ResetApp ] [ text "Select another ticket" ]
+               ]
 
 
-createPlaceholder : String -> Int -> String
-createPlaceholder s n =
-    String.repeat n s
+viewParsingScreen : String -> Html Msg
+viewParsingScreen placeholderCharacter =
+    let
+        ticketDetails =
+            viewTicketDetails Nothing placeholderCharacter
+    in
+    article [] <|
+        ticketDetails
+            ++ [ p [] [ text "Processing the ticket" ]
+               ]
+
+
+viewTicketDetails : Maybe Ticket -> String -> List (Html Msg)
+viewTicketDetails maybeTicket placeholderCharacter =
+    let
+        field =
+            viewField maybeTicket placeholderCharacter
+    in
+    [ p [] [ text <| field 6 .departureStation ++ " → " ++ field 6 .arrivalStation ]
+    , time [] [ text <| field 10 (.departure >> DateTime.toString) ]
+    , time [] [ text <| field 10 (.arrival >> DateTime.toString) ]
+    , p [] [ text <| "🚂 " ++ field 6 .train ]
+    , p [] [ text <| "🚃 " ++ field 1 .carriageNumber ++ " 💺 " ++ field 2 .seat ]
+    , p [ class "details" ] [ text <| "klasa " ++ field 1 .travelClass ++ ", " ++ field 12 .carriageType ]
+    ]
+
+
+viewField : Maybe Ticket -> String -> Int -> (Ticket -> String) -> String
+viewField maybeTicket placeholderCharacter placeholderLength getFieldToText =
+    maybeTicket
+        |> Maybe.map getFieldToText
+        |> Maybe.withDefault (String.repeat placeholderLength placeholderCharacter)
