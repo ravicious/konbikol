@@ -15,7 +15,7 @@ type alias RawTicketData =
     , departureTime : String
     , arrivalTime : String
     , train : String
-    , carriage : String
+    , carriageNumber : String
     , seat : String
     , purchaseDateTime : String
     , travelClass : String
@@ -225,7 +225,7 @@ constructTicket rawTicketData departureDateTime arrivalDateTime =
     , departureStation = rawTicketData.departureStation
     , arrivalStation = rawTicketData.arrivalStation
     , train = rawTicketData.train
-    , carriage = rawTicketData.carriage
+    , carriageNumber = rawTicketData.carriageNumber
     , seat = rawTicketData.seat
     , travelClass = rawTicketData.travelClass
     }

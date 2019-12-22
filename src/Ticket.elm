@@ -11,7 +11,7 @@ type alias Ticket =
     , departureStation : String
     , arrivalStation : String
     , train : String
-    , carriage : String
+    , carriageNumber : String
     , seat : String
     , travelClass : String
     }
@@ -26,15 +26,20 @@ toCalendarEvent ticket =
                 ++ DateTime.toString ticket.departure
                 ++ DateTime.toString ticket.arrival
                 ++ ticket.train
-                ++ ticket.carriage
+                ++ ticket.carriageNumber
                 ++ ticket.seat
                 |> Murmur3.hashString 1
                 |> String.fromInt
-    in
-    { subject = ticket.departureStation ++ " → " ++ ticket.arrivalStation
 
-    -- ics.js doesn't handle newlines in event description, so we have to escape that \n.
-    , description = "🚂 " ++ ticket.train ++ "\\n🚃 " ++ ticket.carriage ++ " 💺 " ++ ticket.seat
+        subject =
+            ticket.departureStation ++ " → " ++ ticket.arrivalStation
+
+        -- ics.js doesn't handle newlines in event description, so we have to escape that \n.
+        description =
+            "🚂 " ++ ticket.train ++ "\\n🚃 " ++ ticket.carriageNumber ++ " 💺 " ++ ticket.seat
+    in
+    { subject = subject
+    , description = description
     , location = ""
     , start = ticket.departure
     , end = ticket.arrival

@@ -183,7 +183,7 @@ viewTicket ticket =
         , time [] [ text <| DateTime.toString ticket.departure ]
         , time [] [ text <| DateTime.toString ticket.arrival ]
         , p [] [ text <| "🚂 " ++ ticket.train ]
-        , p [] [ text <| "🚃 " ++ ticket.carriage ++ " 💺 " ++ ticket.seat ]
+        , p [] [ text <| "🚃 " ++ ticket.carriageNumber ++ " 💺 " ++ ticket.seat ]
         , button
             [ style "font-weight" "bold"
             , onClick (DownloadTicket ticket)
