@@ -41,7 +41,6 @@ type Msg
     = GotFile Decode.Value
     | GotPdfStrings (Array String)
     | DownloadTicket Ticket
-    | ResetApp
     | SetPlaceholderCharacter String
 
 
@@ -120,9 +119,6 @@ update msg model =
         DownloadTicket ticket ->
             ( model, downloadEvent <| Ticket.toCalendarEvent ticket )
 
-        ResetApp ->
-            init ()
-
         SetPlaceholderCharacter character ->
             ( { model | placeholderCharacter = character }, Cmd.none )
 
@@ -147,10 +143,8 @@ view model =
         NotUploaded ->
             article []
                 [ p [] [ text "konbikol converts PKP Intercity tickets to iCalendar events." ]
-                , p [] [ text "Please select a PDF file with the ticket." ]
-                , p [] [ text "The ticket isn't sent to any server, all processing is done on your device." ]
-                , label []
-                    [ text "PDF file"
+                , label [ class "file-input" ]
+                    [ text "Please select a PDF file with the ticket."
                     , input
                         [ type_ "file"
                         , accept "application/pdf"
@@ -158,6 +152,7 @@ view model =
                         ]
                         []
                     ]
+                , p [] [ text "The ticket isn't sent to any server, all processing is done on your device." ]
                 , p []
                     [ a [ href "https://github.com/ravicious/konbikol" ] [ text "Source code" ]
                     ]
@@ -172,7 +167,7 @@ view model =
         ParseError message ->
             div []
                 [ p [] [ text <| "Something went wrong: " ++ message ]
-                , button [ onClick ResetApp ] [ text "Select another ticket" ]
+                , selectTicketInput
                 ]
 
 
@@ -187,8 +182,22 @@ viewTicket ticket =
             ++ [ button
                     [ style "font-weight" "bold", onClick (DownloadTicket ticket) ]
                     [ text "Add event to calendar" ]
-               , button [ onClick ResetApp ] [ text "Select another ticket" ]
+               , br [] []
+               , selectTicketInput
                ]
+
+
+selectTicketInput : Html Msg
+selectTicketInput =
+    label [ class "file-input file-input--secondary" ]
+        [ text "Select another ticket"
+        , input
+            [ type_ "file"
+            , accept "application/pdf"
+            , on "change" (Decode.map GotFile fileDecoder)
+            ]
+            []
+        ]
 
 
 viewParsingScreen : String -> Html Msg
