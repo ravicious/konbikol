@@ -27,6 +27,7 @@ main =
 type alias Model =
     { ticket : TicketStatus
     , placeholderCharacter : String
+    , hasHover : Bool
     }
 
 
@@ -42,6 +43,13 @@ type Msg
     | GotPdfStrings (Array String)
     | DownloadTicket Ticket
     | SetPlaceholderCharacter String
+    | DragEnter
+    | DragLeave
+    | GotPdfjsError PdfjsError
+
+
+type alias PdfjsError =
+    { error : String, fileName : String }
 
 
 port parsePdf : Encode.Value -> Cmd msg
@@ -51,6 +59,9 @@ port downloadEvent : CalendarEvent -> Cmd msg
 
 
 port extractedTextFromPdf : (Array String -> msg) -> Sub msg
+
+
+port pdfjsErrors : (PdfjsError -> msg) -> Sub msg
 
 
 subscriptions : Model -> Sub Msg
@@ -67,6 +78,7 @@ subscriptions model =
     Sub.batch
         [ extractedTextFromPdf GotPdfStrings
         , togglePlaceholderSub
+        , pdfjsErrors GotPdfjsError
         ]
 
 
@@ -95,6 +107,7 @@ init : () -> ( Model, Cmd Msg )
 init _ =
     ( { ticket = NotUploaded
       , placeholderCharacter = character1
+      , hasHover = False
       }
     , Cmd.none
     )
@@ -104,7 +117,18 @@ update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
         GotFile file ->
-            ( { model | ticket = Parsing }, parsePdf file )
+            ( { model | ticket = Parsing, hasHover = False }, parsePdf file )
+
+        GotPdfjsError { error, fileName } ->
+            let
+                errorMessage =
+                    if error == "InvalidPDFException" then
+                        "the given file (" ++ fileName ++ ") doesn't appear to be a valid PDF file"
+
+                    else
+                        error
+            in
+            ( { model | ticket = ParseError errorMessage }, Cmd.none )
 
         GotPdfStrings strings ->
             ( case TicketParser.parseStrings strings of
@@ -122,33 +146,44 @@ update msg model =
         SetPlaceholderCharacter character ->
             ( { model | placeholderCharacter = character }, Cmd.none )
 
+        DragEnter ->
+            ( { model | hasHover = True }, Cmd.none )
 
-fileDecoder : Decode.Decoder Decode.Value
+        DragLeave ->
+            ( { model | hasHover = False }, Cmd.none )
+
+
+fileDecoder : Decode.Decoder Msg
 fileDecoder =
-    Decode.at [ "target", "files" ] (Decode.list Decode.value)
-        |> Decode.andThen
-            (\files ->
-                case List.head files of
-                    Just file ->
-                        Decode.succeed file
+    let
+        keepFirstFile =
+            \firstFile rest -> firstFile
 
-                    Nothing ->
-                        Decode.fail "No files found under target.files of change event of an input[type=\"file\"]"
-            )
+        decodeFirstFileAt =
+            \path -> Decode.at path (Decode.oneOrMore keepFirstFile Decode.value)
+    in
+    Decode.oneOf
+        [ decodeFirstFileAt [ "target", "files" ] -- input[type=file]
+        , decodeFirstFileAt [ "dataTransfer", "files" ] -- drag and drop
+        ]
+        |> Decode.map GotFile
 
 
 view : Model -> Html Msg
 view model =
     case model.ticket of
         NotUploaded ->
-            article []
+            layoutWithDragAndDrop model <|
                 [ p [] [ text "konbikol converts PKP Intercity tickets to iCalendar events." ]
-                , label [ class "file-input" ]
-                    [ text "Please select a PDF file with the ticket."
-                    , input
+                , label [ class "file-input", for "pdf-file" ]
+                    [ text "Please select a PDF file with the ticket or drop it anywhere on the page."
+                    ]
+                , p []
+                    [ input
                         [ type_ "file"
                         , accept "application/pdf"
-                        , on "change" (Decode.map GotFile fileDecoder)
+                        , on "change" fileDecoder
+                        , id "pdf-file"
                         ]
                         []
                     ]
@@ -159,57 +194,78 @@ view model =
                 ]
 
         Parsing ->
-            viewParsingScreen model.placeholderCharacter
+            layout <| viewParsingScreen model.placeholderCharacter
 
         Success ticket ->
-            viewTicket ticket
+            layoutWithDragAndDrop model <|
+                viewTicket ticket
 
         ParseError message ->
-            div []
+            layoutWithDragAndDrop model <|
                 [ p [] [ text <| "Something went wrong: " ++ message ]
                 , selectTicketInput
                 ]
 
 
-viewTicket : Ticket -> Html Msg
+layout : List (Html Msg) -> Html Msg
+layout =
+    article []
+
+
+layoutWithDragAndDrop : Model -> List (Html Msg) -> Html Msg
+layoutWithDragAndDrop model =
+    article
+        [ hijackOn "dragenter" (Decode.succeed DragEnter)
+        , hijackOn "dragover" (Decode.succeed DragEnter)
+        , hijackOn "dragleave" (Decode.succeed DragLeave)
+        , hijackOn "drop" fileDecoder
+        , class
+            (if model.hasHover then
+                "has-hover"
+
+             else
+                ""
+            )
+        ]
+
+
+viewTicket : Ticket -> List (Html Msg)
 viewTicket ticket =
     let
         ticketDetails =
             viewTicketDetails (Just ticket) ""
     in
-    article [] <|
-        ticketDetails
-            ++ [ button
-                    [ style "font-weight" "bold", onClick (DownloadTicket ticket) ]
-                    [ text "Add event to calendar" ]
-               , br [] []
-               , selectTicketInput
-               ]
+    ticketDetails
+        ++ [ button
+                [ style "font-weight" "bold", onClick (DownloadTicket ticket) ]
+                [ text "Add event to calendar" ]
+           , br [] []
+           , selectTicketInput
+           ]
 
 
 selectTicketInput : Html Msg
 selectTicketInput =
     label [ class "file-input file-input--secondary" ]
-        [ text "Select another ticket"
+        [ text "Select another ticket or drop it anywhere on the page"
         , input
             [ type_ "file"
             , accept "application/pdf"
-            , on "change" (Decode.map GotFile fileDecoder)
+            , on "change" fileDecoder
             ]
             []
         ]
 
 
-viewParsingScreen : String -> Html Msg
+viewParsingScreen : String -> List (Html Msg)
 viewParsingScreen placeholderCharacter =
     let
         ticketDetails =
             viewTicketDetails Nothing placeholderCharacter
     in
-    article [] <|
-        ticketDetails
-            ++ [ p [] [ text "Processing the ticket" ]
-               ]
+    ticketDetails
+        ++ [ p [] [ text "Processing the ticket" ]
+           ]
 
 
 viewTicketDetails : Maybe Ticket -> String -> List (Html Msg)
@@ -232,3 +288,13 @@ viewField maybeTicket placeholderCharacter placeholderLength getFieldToText =
     maybeTicket
         |> Maybe.map getFieldToText
         |> Maybe.withDefault (String.repeat placeholderLength placeholderCharacter)
+
+
+hijackOn : String -> Decode.Decoder msg -> Attribute msg
+hijackOn event decoder =
+    preventDefaultOn event (Decode.map hijack decoder)
+
+
+hijack : msg -> ( msg, Bool )
+hijack msg =
+    ( msg, True )
