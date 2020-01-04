@@ -8,8 +8,27 @@
     <script src="main.js"></script>
     <script defer src="vendor/ics.deps.min.js"></script>
     <style>
+      :root {
+        --font-color: #333;
+        --background-color: white;
+        --link-color: inherit;
+      }
+
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --font-color: white;
+          --background-color: #333;
+          --link-color: mediumvioletred;
+        }
+
+        a {
+          color: var(--link-color);
+        }
+      }
+
       html {
-        color: #333;
+        color: var(--font-color);
+        background-color: var(--background-color);
         font-size: 24px;
       }
 
@@ -52,17 +71,6 @@
 
       .file-input--secondary {
         font-size: 0.55em;
-      }
-
-      @media (prefers-color-scheme: dark) {
-        body {
-          color: white;
-          background-color: #333;
-        }
-
-        a {
-          color: mediumvioletred;
-        }
       }
     </style>
   </head>
