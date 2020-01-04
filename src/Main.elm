@@ -45,6 +45,11 @@ type Msg
     | SetPlaceholderCharacter String
     | DragEnter
     | DragLeave
+    | GotPdfjsError PdfjsError
+
+
+type alias PdfjsError =
+    { error : String, fileName : String }
 
 
 port parsePdf : Encode.Value -> Cmd msg
@@ -54,6 +59,9 @@ port downloadEvent : CalendarEvent -> Cmd msg
 
 
 port extractedTextFromPdf : (Array String -> msg) -> Sub msg
+
+
+port pdfjsErrors : (PdfjsError -> msg) -> Sub msg
 
 
 subscriptions : Model -> Sub Msg
@@ -70,6 +78,7 @@ subscriptions model =
     Sub.batch
         [ extractedTextFromPdf GotPdfStrings
         , togglePlaceholderSub
+        , pdfjsErrors GotPdfjsError
         ]
 
 
@@ -109,6 +118,17 @@ update msg model =
     case msg of
         GotFile file ->
             ( { model | ticket = Parsing, hasHover = False }, parsePdf file )
+
+        GotPdfjsError { error, fileName } ->
+            let
+                errorMessage =
+                    if error == "InvalidPDFException" then
+                        "the given file (" ++ fileName ++ ") doesn't appear to be a valid PDF file"
+
+                    else
+                        error
+            in
+            ( { model | ticket = ParseError errorMessage }, Cmd.none )
 
         GotPdfStrings strings ->
             ( case TicketParser.parseStrings strings of

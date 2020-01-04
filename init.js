@@ -10,11 +10,12 @@ app.ports.parsePdf.subscribe(function(file) {
   getPdfTextFromFile(file).then(function(textArray) {
     app.ports.extractedTextFromPdf.send(textArray)
   }, function(error) {
+    console.error(error)
+
     if (error.name == 'InvalidPDFException') {
-      // TODO: Tell Elm the file is invalid.
-      console.error('Invalid PDF!')
+      app.ports.pdfjsErrors.send({error: error.name, fileName: file.name})
     } else {
-      console.error(error)
+      app.ports.pdfjsErrors.send({error: error.name + " (" + error.message + ")", fileName: file.name})
     }
   })
 })
