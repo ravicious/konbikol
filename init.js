@@ -4,6 +4,9 @@ var app = Elm.Main.init({
   node: document.getElementById('app-container')
 })
 
+// Start preloading pdf.min.js after page load.
+// It's actually good that it's loaded at this point, the first big chunk of dependencies can be
+// preloaded while the user selects the PDF file.
 var pdfjsLoadPromise = loadJsFile('vendor/pdf.min.js')
 
 app.ports.parsePdf.subscribe(function(file) {
