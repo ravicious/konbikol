@@ -273,13 +273,17 @@ viewTicketDetails maybeTicket placeholderCharacter =
     let
         field =
             viewField maybeTicket placeholderCharacter
+
+        fieldWithoutPlaceholder =
+            viewField maybeTicket "" 0
     in
     [ p [] [ text <| field 6 .departureStation ++ " → " ++ field 6 .arrivalStation ]
     , time [] [ text <| field 10 (.departure >> DateTime.toString) ]
     , time [] [ text <| field 10 (.arrival >> DateTime.toString) ]
     , p [] [ text <| "🚂 " ++ field 6 .train ]
-    , p [] [ text <| "🚃 " ++ field 1 .carriageNumber ++ " 💺 " ++ field 2 .seat ]
-    , p [ class "details" ] [ text <| "klasa " ++ field 1 .travelClass ++ ", " ++ field 12 .carriageType ]
+    , p [] [ text <| "🚃 " ++ field 2 .carriageNumber ++ " 💺 " ++ field 2 .seat ]
+    , p [ class "details" ] [ text <| "klasa " ++ field 1 .travelClass ]
+    , p [ class "details" ] [ text <| fieldWithoutPlaceholder .carriageType ]
     ]
 
 

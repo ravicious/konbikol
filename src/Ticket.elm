@@ -39,7 +39,13 @@ toCalendarEvent ticket =
             "🚂 " ++ ticket.train ++ "\n🚃 " ++ ticket.carriageNumber ++ " 💺 " ++ ticket.seat
 
         travelClassAndCarriageType =
-            "klasa " ++ ticket.travelClass ++ ", " ++ ticket.carriageType
+            "klasa " ++ ticket.travelClass
+                ++ (if String.isEmpty ticket.carriageType then
+                        ""
+
+                    else
+                        ", " ++ ticket.carriageType
+                   )
 
         description =
             (trainCarriageNumberAndSeat ++ "\n" ++ travelClassAndCarriageType)
