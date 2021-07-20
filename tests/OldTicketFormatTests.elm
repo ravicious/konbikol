@@ -1,4 +1,4 @@
-module TicketParserTests exposing (..)
+module OldTicketFormatTests exposing (..)
 
 import Array
 import DateTime exposing (DateTime)
@@ -10,8 +10,8 @@ import TicketParser
 
 suite : Test
 suite =
-    describe "TicketParser"
-        [ test "parses a regular ticket correctly" <|
+    describe "old ticket format"
+        [ test "is parsed correctly" <|
             \_ ->
                 let
                     expectedTicket =
@@ -28,7 +28,7 @@ suite =
                 in
                 TicketParser.parseStrings regularTicketStrings
                     |> Expect.equal (Ok expectedTicket)
-        , test "handles a returned ticket with arrival on a different day than departure" <|
+        , test "is parsed correctly when returned and with arrival on a different day than departure" <|
             \_ ->
                 let
                     expectedTicket =
@@ -45,7 +45,7 @@ suite =
                 in
                 TicketParser.parseStrings differentDaysTicketStrings
                     |> Expect.equal (Ok expectedTicket)
-        , test "handles a double ticket" <|
+        , test "is parsed correctly when it's a double ticket" <|
             \_ ->
                 let
                     expectedTicket =
@@ -62,7 +62,7 @@ suite =
                 in
                 TicketParser.parseStrings doubleTicketStrings
                     |> Expect.equal (Ok expectedTicket)
-        , test "handles a ticket bought for the next year" <|
+        , test "is parsed correctly when it was bought for the next year" <|
             \_ ->
                 let
                     expectedTicket =
@@ -79,7 +79,7 @@ suite =
                 in
                 TicketParser.parseStrings ticketForNextYear
                     |> Expect.equal (Ok expectedTicket)
-        , test "handles a ticket with spaces around strings" <|
+        , test "is parsed correctly when there are spaces around strings" <|
             \_ ->
                 let
                     expectedTicket =
