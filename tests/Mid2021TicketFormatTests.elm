@@ -28,6 +28,23 @@ suite =
                 in
                 TicketParser.parseStrings mid2021Ticket
                     |> Expect.equal (Ok expectedTicket)
+        , test "is parsed correctly for a double ticket" <|
+            \_ ->
+                let
+                    expectedTicket =
+                        { departureStation = "Kraków Główny"
+                        , arrivalStation = "Quux"
+                        , departure = DateTime 2021 9 15 12 25
+                        , arrival = DateTime 2021 9 15 15 29
+                        , train = "TLK 12345"
+                        , carriageNumber = "16 p"
+                        , seat = "66 o, 67 o"
+                        , travelClass = "1"
+                        , carriageType = ""
+                        }
+                in
+                TicketParser.parseStrings doubleTicket
+                    |> Expect.equal (Ok expectedTicket)
         ]
 
 
@@ -98,5 +115,78 @@ mid2021Ticket =
         , "NR BILETU: "
         , "eIC123456789"
         , ", 1234 (P24) 4321"
+        , "NR REFERENCYJNY:  123456789012"
+        ]
+
+
+doubleTicket =
+    Array.fromList
+        [ "Bilet (15.09.2021)"
+        , "Kraków Główny "
+        , " Quux"
+        , "x2"
+        , "Bilet jest ważny wraz z dokumentem ze zdjęciem potwierdzającym"
+        , "tożsamość. Na każde żądanie organu kontrolnego w pociągu bilet należy"
+        , "przedstawić do kontroli."
+        , "Informacje o podróży"
+        , "Bar Baz"
+        , " to Twój plan podróży:"
+        , "relacja"
+        , "przew."
+        , "poc."
+        , "kl."
+        , "wagon"
+        , "miejsca"
+        , "1)"
+        , "Kraków"
+        , "Główny"
+        , "Quux"
+        , "12:25"
+        , " - 15:29"
+        , "15.09.2021"
+        , "PKP"
+        , "IC"
+        , "TLK"
+        , "12345"
+        , "1"
+        , "16"
+        , " p"
+        , "66"
+        , " o, "
+        , "67"
+        , " o"
+        , "LEGENDA: p - przedziałowy; o - od okna"
+        , "1)"
+        , "Uprawnia do przejazdu ze st. Kraków Płaszów do st. Kraków Główny wybranymi tramwajami ZTP"
+        , "i EIC/TLK/IC (w EZT - obowiązkowy bilet dodatkowy). Więcej: www.intercity.pl/krk"
+        , "Na stacji odjazdu sprawdzisz z jakiego peronu odjeżdża Twój pociąg."
+        , "Wybierając PKP Intercity emitujesz tylko 8,0 kg CO2 na pasażera. To ponad 3 razy mniej niż samochód (29,3 kg) i 8 razy mniej"
+        , "niż samolot (70,0 kg)."
+        , "Informacje rozliczeniowe"
+        , "Usługa"
+        , "Liczba"
+        , "Ulga"
+        , "Oferta"
+        , "VAT (zł)"
+        , "Należność (zł)"
+        , "Kraków Główny "
+        , " Quux (123 km)"
+        , "Przejazd osób"
+        , "2"
+        , "-"
+        , "1 A-Cena bazowa"
+        , "8% 11,11"
+        , "111,00"
+        , "Razem:"
+        , "111,00"
+        , "Sposób płatności: przelew"
+        , "Zapłacono i wystawiono: 15.09.2021 11:21:11"
+        , "Num. płatności: 12345678"
+        , "Ten bilet nie jest fakturą"
+        , "Sprzedawca: PKP Intercity S.A."
+        , "Dokument wygenerowano: 15.09.2021 11:21:12"
+        , "NR BILETU: "
+        , "eIC123456789"
+        , ", 12345 (P24) 1234"
         , "NR REFERENCYJNY:  123456789012"
         ]
