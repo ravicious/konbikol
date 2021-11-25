@@ -2,7 +2,7 @@ module Ticket exposing (Ticket, toCalendarEvent)
 
 import CalendarEvent exposing (CalendarEvent)
 import DateTime exposing (DateTime)
-import Murmur3
+import FNV1a
 
 
 type alias Ticket =
@@ -29,7 +29,7 @@ toCalendarEvent ticket =
                 ++ ticket.train
                 ++ ticket.carriageNumber
                 ++ ticket.seat
-                |> Murmur3.hashString 1
+                |> FNV1a.hash
                 |> String.fromInt
 
         subject =
@@ -39,7 +39,8 @@ toCalendarEvent ticket =
             "🚂 " ++ ticket.train ++ "\n🚃 " ++ ticket.carriageNumber ++ " 💺 " ++ ticket.seat
 
         travelClassAndCarriageType =
-            "klasa " ++ ticket.travelClass
+            "klasa "
+                ++ ticket.travelClass
                 ++ (if String.isEmpty ticket.carriageType then
                         ""
 
