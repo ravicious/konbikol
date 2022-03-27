@@ -9,28 +9,39 @@ var app = Elm.Main.init({
 // preloaded while the user selects the PDF file.
 var pdfjsLoadPromise = loadJsFile('vendor/pdf.min.js')
 
-app.ports.parsePdf.subscribe(function(file) {
+app.ports.parsePdf.subscribe(function(args) {
+  const [index, file] = args
+
   getPdfTextFromFile(file).then(function(textArray) {
-    app.ports.extractedTextFromPdf.send(textArray)
+    app.ports.extractedTextFromPdf.send([index, file.name, textArray])
   }, function(error) {
     console.error(error)
+    let message
 
-    if (error.name == 'InvalidPDFException') {
-      app.ports.pdfjsErrors.send({error: error.name, fileName: file.name})
+    if (error.name === "InvalidPDFException") {
+      message = "Not a valid PDF file"
+    } else if (error.message) {
+      message = error.name + " (" + error.message + ")"
     } else {
-      app.ports.pdfjsErrors.send({error: error.name + " (" + error.message + ")", fileName: file.name})
+      message = error.name
     }
+
+    app.ports.pdfjsErrors.send([index, {fileName: file.name, message}])
   })
 })
 
 if (window.location.hash.includes("debug")) {
-  getPdfTextFromPdfJsInput('ticket.pdf').then(function(textArray) {
-    console.group("text array from pdf.js")
-    console.log(textArray)
-    console.groupEnd()
+  (async () => {
+    const response = await fetch('ticket.pdf')
+    const blob = await response.blob()
+    const file = new File([blob], 'ticket.pdf', {type: "application/pdf"}, 'utf-8')
+    const container = new DataTransfer()
+    const input = document.getElementById('pdf-file')
 
-    app.ports.extractedTextFromPdf.send(textArray)
-  }, console.error)
+    container.items.add(file)
+    input.files = container.files
+    input.dispatchEvent(new Event('change'))
+  })()
 }
 
 app.ports.downloadEvent.subscribe(function(event) {
@@ -65,7 +76,15 @@ function getPdfTextFromPdfJsInput(input) {
   }).then(function(page) {
     return page.getTextContent()
   }).then(function(textContent) {
-    return textContent.items.map(function (s) { return s.str })
+    const textArray = textContent.items.map(function (s) { return s.str })
+
+    if (window.location.hash.includes("debug")) {
+      console.group("text array from pdf.js")
+      console.log(textArray)
+      console.groupEnd()
+    }
+
+    return textArray
   })
 }
 
@@ -113,3 +132,15 @@ function loadJsFile(url) {
     }, 1)
   })
 }
+
+// Debugging utilities.
+function getRandomInt(min, max) {
+  min = Math.ceil(min);
+  max = Math.floor(max);
+  return Math.floor(Math.random() * (max - min) + min); //The maximum is exclusive and the minimum is inclusive
+}
+
+function sleep(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
